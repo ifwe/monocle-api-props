@@ -1,5 +1,5 @@
-Monocle Props
-=============
+Monocle API Props
+=================
 
 Uses the Monocle API "props" syntax to determine if an object or array contains the specified properties.
 
@@ -9,12 +9,17 @@ Uses the Monocle API "props" syntax to determine if an object or array contains 
 // Require this library
 var MoncoleApiProps = require('monocle-api-props');
 
-// Create an instance with the users data
-var props = new MoncoleApiProps(users);
+// Create an instance with an array or object we want to check
+var props = new MoncoleApiProps(something);
 
-// Check if deeply nested properties exist
-props.has('items@name'); // returns true or false if the path exists
+// Check if deeply nested properties exist using Monocle API's path syntax
+props.has('someProp.someNestedProp'); // returns true or false if the path exists
 ```
+
+## Syntax
+
+- `.`: a nested property, e.g. `a.b` will be found within the object `{ a: { b: 1 } }`
+- `@`: a property within each object in an array, e.g. `a@b` will be find `{ a: [ { b: 1 }, { b: 2 } ] }
 
 ## Advanced Example
 
