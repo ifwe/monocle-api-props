@@ -1,6 +1,6 @@
 {
   "name": "monocle-api-props",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Monocle API's solution for verifying deeply nested properties are set.",
   "main": "lib/index.js",
   "scripts": {
