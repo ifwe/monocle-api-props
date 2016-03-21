@@ -473,4 +473,55 @@ describe('MonocleProps', function() {
             });
         });
     });
+
+    describe('list()', function() {
+        beforeEach(function() {
+            this.resource = {
+                top: [
+                    {
+                        foo: 'test foo 1',
+                        bar: 'test bar 1',
+                        derp: {
+                            berp: 'test berp'
+                        }
+                    },
+                    {
+                        foo: 'test foo 2',
+                        bar: 'test bar 2',
+                        herp: ['a', 'b', 'c']
+                    },
+                    {
+                        foo: 'test foo 3',
+                        bar: 'test bar 3',
+                        jerp: [
+                            {
+                                kerp: 'lerp',
+                                flerp: [
+                                    {
+                                        haboo: null
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            };
+            this.props = new MonocleProps(this.resource);
+        });
+
+        it('returns array of all defined props', function() {
+            var list = this.props.list();
+            list.should.have.lengthOf(10);
+            list.should.contain('top');
+            list.should.contain('top@foo');
+            list.should.contain('top@bar');
+            list.should.contain('top@derp');
+            list.should.contain('top@derp.berp');
+            list.should.contain('top@herp');
+            list.should.contain('top@jerp');
+            list.should.contain('top@jerp@kerp');
+            list.should.contain('top@jerp@flerp');
+            list.should.contain('top@jerp@flerp@haboo');
+        });
+    });
 });
