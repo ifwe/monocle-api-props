@@ -247,4 +247,230 @@ describe('MonocleProps', function() {
             });
         });
     });
+
+    describe('.set', function() {
+        describe('with simple object', function() {
+            beforeEach(function() {
+                this.resource = {
+                    foo: 'test foo',
+                    bar: 'test bar'
+                };
+                this.props = new MonocleProps(this.resource);
+            });
+
+            it('updates specified property', function() {
+                this.props.set('foo', 'updated foo');
+                this.resource.foo.should.equal('updated foo');
+            });
+
+            it('does not update other properties', function() {
+                this.props.set('foo', 'updated foo');
+                this.resource.bar.should.equal('test bar');
+            });
+
+            it('does nothing if specified property does not exist', function() {
+                this.props.set('something', 'anything');
+                expect(this.resource.something).to.be.undefined;
+            });
+        });
+
+        describe('with simple array', function() {
+            beforeEach(function() {
+                this.resource = [
+                    'test foo',
+                    'test bar'
+                ];
+                this.props = new MonocleProps(this.resource);
+            });
+
+            it('replaces array with new value', function() {
+                this.props.set('@', ['a', 'b', 'c']);
+                this.resource.should.have.lengthOf(3);
+                this.resource.should.contain('a');
+                this.resource.should.contain('b');
+                this.resource.should.contain('c');
+                this.resource.should.not.contain('test foo');
+                this.resource.should.not.contain('test bar');
+            });
+        });
+
+        describe('with nested object', function() {
+            beforeEach(function() {
+                this.resource = {
+                    foo: {
+                        bar: 'test foo bar',
+                        baz: 'test foo baz'
+                    },
+                    derp: {
+                        bar: 'test derp bar',
+                        baz: 'test derp baz'
+                    },
+                    deep: {
+                        deeper: {
+                            deeperer: {
+                                deepest: 'ok'
+                            }
+                        }
+                    }
+                };
+                this.props = new MonocleProps(this.resource);
+            });
+
+            it('replaces nested property', function() {
+                this.props.set('foo.bar', 'updated');
+                this.resource.foo.bar.should.equal('updated');
+            });
+
+            it('does not update other properties', function() {
+                this.props.set('foo.bar', 'updated');
+                this.resource.foo.baz.should.equal('test foo baz');
+                this.resource.derp.bar.should.equal('test derp bar');
+                this.resource.derp.baz.should.equal('test derp baz');
+            });
+
+            it('does nothing if property does not exist', function() {
+                this.props.set('foo.bar', 'updated');
+                this.resource.foo.baz.should.equal('test foo baz');
+                this.resource.derp.bar.should.equal('test derp bar');
+                this.resource.derp.baz.should.equal('test derp baz');
+            });
+
+            it('replaces deeply nested property', function() {
+                this.props.set('deep.deeper.deeperer.deepest', 'yay');
+                this.resource.deep.deeper.deeperer.deepest.should.equal('yay');
+            });
+
+            it('does nothing if top level of deep path does not exist', function() {
+                this.props.set('deep.beeper.keeperer.seepest', 'yay');
+                this.resource.deep.deeper.deeperer.deepest.should.equal('ok');
+            });
+        });
+
+        describe('with array of objects', function() {
+            beforeEach(function() {
+                this.resource = [
+                    {
+                        foo: 'test foo 1',
+                        bar: 'test bar 1'
+                    },
+                    {
+                        foo: 'test foo 2',
+                        bar: 'test bar 2'
+                    },
+                    {
+                        foo: 'test foo 3',
+                        bar: 'test bar 3'
+                    }
+                ];
+                this.props = new MonocleProps(this.resource);
+            });
+
+            it('replaces property for all objects within array', function() {
+                this.props.set('@foo', 'updated foo');
+                this.resource.should.have.lengthOf(3);
+                this.resource[0].should.have.property('foo', 'updated foo');
+                this.resource[1].should.have.property('foo', 'updated foo');
+                this.resource[2].should.have.property('foo', 'updated foo');
+            });
+
+            it('does not replace properties that do not match the path', function() {
+                this.props.set('@foo', 'updated foo');
+                this.resource.should.have.lengthOf(3);
+                this.resource[0].should.have.property('bar', 'test bar 1');
+                this.resource[1].should.have.property('bar', 'test bar 2');
+                this.resource[2].should.have.property('bar', 'test bar 3');
+            });
+        });
+
+        describe('with object of array of objects', function() {
+            beforeEach(function() {
+                this.resource = {
+                    top: [
+                        {
+                            foo: 'test foo 1',
+                            bar: 'test bar 1'
+                        },
+                        {
+                            foo: 'test foo 2',
+                            bar: 'test bar 2'
+                        },
+                        {
+                            foo: 'test foo 3',
+                            bar: 'test bar 3'
+                        }
+                    ]
+                };
+                this.props = new MonocleProps(this.resource);
+            });
+
+            it('replaces property for all objects within array', function() {
+                this.props.set('top@foo', 'updated foo');
+                this.resource.top.should.have.lengthOf(3);
+                this.resource.top[0].should.have.property('foo', 'updated foo');
+                this.resource.top[1].should.have.property('foo', 'updated foo');
+                this.resource.top[2].should.have.property('foo', 'updated foo');
+            });
+
+            it('does not replace properties that do not match the path', function() {
+                this.props.set('top@foo', 'updated foo');
+                this.resource.top.should.have.lengthOf(3);
+                this.resource.top[0].should.have.property('bar', 'test bar 1');
+                this.resource.top[1].should.have.property('bar', 'test bar 2');
+                this.resource.top[2].should.have.property('bar', 'test bar 3');
+            });
+        });
+
+        describe.skip('with object of array of objects with array of object', function() {
+            beforeEach(function() {
+                this.resource = {
+                    top: [
+                        {
+                            child: [
+                                {
+                                    foo: 'test foo 1',
+                                    bar: 'test bar 1'
+                                },
+                                {
+                                    foo: 'test foo 2',
+                                    bar: 'test bar 2'
+                                }
+                            ]
+                        },
+                        {
+                            child: [
+                                {
+                                    foo: 'test foo 1',
+                                    bar: 'test bar 1'
+                                },
+                                {
+                                    foo: 'test foo 2',
+                                    bar: 'test bar 2'
+                                }
+                            ]
+                        },
+                        {
+                            child: [
+                                {
+                                    foo: 'test foo 3',
+                                    bar: 'test bar 3'
+                                },
+                                {
+                                    foo: 'test foo 4',
+                                    bar: 'test bar 4'
+                                }
+                            ]
+                        }
+                    ]
+                };
+                this.props = new MonocleProps(this.resource);
+            });
+
+            it('replaces property for all objects within array', function() {
+                this.props.set('top@child@foo', 'updated foo');
+                this.resource.top[0].child.should.have.lengthOf(2);
+                this.resource.top[0].child[0].should.have.property('foo', 'updated foo');
+                this.resource.top[1].child[0].should.have.property('foo', 'updated foo');
+            });
+        });
+    });
 });
