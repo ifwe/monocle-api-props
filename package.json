@@ -33,6 +33,7 @@
     "sinon": "1.17.3"
   },
   "dependencies": {
-    "debug": "2.2.0"
+    "debug": "2.2.0",
+    "grunt-bump": "0.7.0"
   }
 }
