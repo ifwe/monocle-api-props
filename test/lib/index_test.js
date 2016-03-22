@@ -474,6 +474,65 @@ describe('MonocleProps', function() {
         });
     });
 
+    describe('.get()', function() {
+        beforeEach(function() {
+            this.resource = {
+                top: [
+                    {
+                        foo: 'test foo 1',
+                        bar: 'test bar 1',
+                        derp: {
+                            berp: 'test berp'
+                        }
+                    },
+                    {
+                        foo: 'test foo 2',
+                        bar: 'test bar 2',
+                        herp: ['a', 'b', 'c']
+                    },
+                    {
+                        foo: 'test foo 3',
+                        bar: 'test bar 3',
+                        jerp: [
+                            {
+                                kerp: 'lerp',
+                                flerp: [
+                                    {
+                                        haboo: null
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            };
+            this.props = new MonocleProps(this.resource);
+        });
+
+        it('returns all matching properties from top level', function() {
+            this.props.get('top').should.contain(this.resource.top);
+        });
+
+        it('returns all matching properties from array of objects under top level', function() {
+            var all = this.props.get('top@foo');
+            all.should.contain(this.resource.top[0].foo);
+            all.should.contain(this.resource.top[1].foo);
+            all.should.contain(this.resource.top[2].foo);
+        });
+
+        it('returns all deeply nested matching properties from array of objects under top level', function() {
+            var all = this.props.get('top@jerp@kerp');
+            all.should.contain('lerp');
+            all.should.have.lengthOf(1);
+        });
+
+        it('returns all very deeply nested matching properties from array of objects under top level', function() {
+            var all = this.props.get('top@jerp@flerp@haboo');
+            all.should.contain(null);
+            all.should.have.lengthOf(1);
+        });
+    });
+
     describe('list()', function() {
         beforeEach(function() {
             this.resource = {
