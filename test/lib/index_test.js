@@ -34,6 +34,30 @@ describe('MonocleProps', function() {
             });
         });
 
+        describe('with prototypeless object', function() {
+            beforeEach(function() {
+                this.resource = toPrototypelessObject({
+                    foo: 'test foo',
+                    bar: 'test bar',
+                    baz: undefined
+                });
+                this.props = new MonocleProps(this.resource);
+            });
+
+            it('returns true if property exists and is not undefined', function() {
+                this.props.has('foo').should.be.true;
+                this.props.has('bar').should.be.true;
+            });
+
+            it('returns false if property exists but is undefined', function() {
+                this.props.has('baz').should.be.false;
+            });
+
+            it('returns false if property does not exist', function() {
+                this.props.has('derp').should.be.false;
+            });
+        });
+
         describe('with nested objects in resource', function() {
             beforeEach(function() {
                 this.resource = {
@@ -274,6 +298,31 @@ describe('MonocleProps', function() {
             });
         });
 
+        describe('with prototypeless object', function() {
+            beforeEach(function() {
+                this.resource = toPrototypelessObject({
+                    foo: 'test foo',
+                    bar: 'test bar'
+                });
+                this.props = new MonocleProps(this.resource);
+            });
+
+            it('updates specified property', function() {
+                this.props.set('foo', 'updated foo');
+                this.resource.foo.should.equal('updated foo');
+            });
+
+            it('does not update other properties', function() {
+                this.props.set('foo', 'updated foo');
+                this.resource.bar.should.equal('test bar');
+            });
+
+            it('does nothing if specified property does not exist', function() {
+                this.props.set('something', 'anything');
+                expect(this.resource.something).to.be.undefined;
+            });
+        });
+
         describe('with simple array', function() {
             beforeEach(function() {
                 this.resource = [
@@ -475,112 +524,236 @@ describe('MonocleProps', function() {
     });
 
     describe('.get()', function() {
-        beforeEach(function() {
-            this.resource = {
-                top: [
-                    {
-                        foo: 'test foo 1',
-                        bar: 'test bar 1',
-                        derp: {
-                            berp: 'test berp'
-                        }
-                    },
-                    {
-                        foo: 'test foo 2',
-                        bar: 'test bar 2',
-                        herp: ['a', 'b', 'c']
-                    },
-                    {
-                        foo: 'test foo 3',
-                        bar: 'test bar 3',
-                        jerp: [
-                            {
-                                kerp: 'lerp',
-                                flerp: [
-                                    {
-                                        haboo: null
-                                    }
-                                ]
+        describe('with basic object', function() {
+            beforeEach(function() {
+                this.resource = {
+                    top: [
+                        {
+                            foo: 'test foo 1',
+                            bar: 'test bar 1',
+                            derp: {
+                                berp: 'test berp'
                             }
-                        ]
-                    }
-                ]
-            };
-            this.props = new MonocleProps(this.resource);
+                        },
+                        {
+                            foo: 'test foo 2',
+                            bar: 'test bar 2',
+                            herp: ['a', 'b', 'c']
+                        },
+                        {
+                            foo: 'test foo 3',
+                            bar: 'test bar 3',
+                            jerp: [
+                                {
+                                    kerp: 'lerp',
+                                    flerp: [
+                                        {
+                                            haboo: null
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                };
+                this.props = new MonocleProps(this.resource);
+            });
+
+            it('returns all matching properties from top level', function() {
+                this.props.get('top').should.contain(this.resource.top);
+            });
+
+            it('returns all matching properties from array of objects under top level', function() {
+                var all = this.props.get('top@foo');
+                all.should.contain(this.resource.top[0].foo);
+                all.should.contain(this.resource.top[1].foo);
+                all.should.contain(this.resource.top[2].foo);
+            });
+
+            it('returns all deeply nested matching properties from array of objects under top level', function() {
+                var all = this.props.get('top@jerp@kerp');
+                all.should.contain('lerp');
+                all.should.have.lengthOf(1);
+            });
+
+            it('returns all very deeply nested matching properties from array of objects under top level', function() {
+                var all = this.props.get('top@jerp@flerp@haboo');
+                all.should.contain(null);
+                all.should.have.lengthOf(1);
+            });
         });
 
-        it('returns all matching properties from top level', function() {
-            this.props.get('top').should.contain(this.resource.top);
-        });
+        describe('with prototypeless object', function() {
+            beforeEach(function() {
+                this.resource = toPrototypelessObject({
+                    top: [
+                        toPrototypelessObject({
+                            foo: 'test foo 1',
+                            bar: 'test bar 1',
+                            derp: toPrototypelessObject({
+                                berp: 'test berp'
+                            })
+                        }),
+                        toPrototypelessObject({
+                            foo: 'test foo 2',
+                            bar: 'test bar 2',
+                            herp: ['a', 'b', 'c']
+                        }),
+                        toPrototypelessObject({
+                            foo: 'test foo 3',
+                            bar: 'test bar 3',
+                            jerp: [
+                                toPrototypelessObject({
+                                    kerp: 'lerp',
+                                    flerp: [
+                                        toPrototypelessObject({
+                                            haboo: null
+                                        })
+                                    ]
+                                })
+                            ]
+                        })
+                    ]
+                });
+                this.props = new MonocleProps(this.resource);
+            });
 
-        it('returns all matching properties from array of objects under top level', function() {
-            var all = this.props.get('top@foo');
-            all.should.contain(this.resource.top[0].foo);
-            all.should.contain(this.resource.top[1].foo);
-            all.should.contain(this.resource.top[2].foo);
-        });
+            it('returns all matching properties from top level', function() {
+                this.props.get('top').should.contain(this.resource.top);
+            });
 
-        it('returns all deeply nested matching properties from array of objects under top level', function() {
-            var all = this.props.get('top@jerp@kerp');
-            all.should.contain('lerp');
-            all.should.have.lengthOf(1);
-        });
+            it('returns all matching properties from array of objects under top level', function() {
+                var all = this.props.get('top@foo');
+                all.should.contain(this.resource.top[0].foo);
+                all.should.contain(this.resource.top[1].foo);
+                all.should.contain(this.resource.top[2].foo);
+            });
 
-        it('returns all very deeply nested matching properties from array of objects under top level', function() {
-            var all = this.props.get('top@jerp@flerp@haboo');
-            all.should.contain(null);
-            all.should.have.lengthOf(1);
+            it('returns all deeply nested matching properties from array of objects under top level', function() {
+                var all = this.props.get('top@jerp@kerp');
+                all.should.contain('lerp');
+                all.should.have.lengthOf(1);
+            });
+
+            it('returns all very deeply nested matching properties from array of objects under top level', function() {
+                var all = this.props.get('top@jerp@flerp@haboo');
+                all.should.contain(null);
+                all.should.have.lengthOf(1);
+            });
         });
     });
 
     describe('list()', function() {
-        beforeEach(function() {
-            this.resource = {
-                top: [
-                    {
-                        foo: 'test foo 1',
-                        bar: 'test bar 1',
-                        derp: {
-                            berp: 'test berp'
-                        }
-                    },
-                    {
-                        foo: 'test foo 2',
-                        bar: 'test bar 2',
-                        herp: ['a', 'b', 'c']
-                    },
-                    {
-                        foo: 'test foo 3',
-                        bar: 'test bar 3',
-                        jerp: [
-                            {
-                                kerp: 'lerp',
-                                flerp: [
-                                    {
-                                        haboo: null
-                                    }
-                                ]
+        describe('with normal objects', function() {
+            beforeEach(function() {
+                this.resource = {
+                    top: [
+                        {
+                            foo: 'test foo 1',
+                            bar: 'test bar 1',
+                            derp: {
+                                berp: 'test berp'
                             }
-                        ]
-                    }
-                ]
-            };
-            this.props = new MonocleProps(this.resource);
+                        },
+                        {
+                            foo: 'test foo 2',
+                            bar: 'test bar 2',
+                            herp: ['a', 'b', 'c']
+                        },
+                        {
+                            foo: 'test foo 3',
+                            bar: 'test bar 3',
+                            jerp: [
+                                {
+                                    kerp: 'lerp',
+                                    flerp: [
+                                        {
+                                            haboo: null
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                };
+                this.props = new MonocleProps(this.resource);
+            });
+
+            it('returns array of all defined props', function() {
+                var list = this.props.list();
+                list.should.have.lengthOf(10);
+                list.should.contain('top');
+                list.should.contain('top@foo');
+                list.should.contain('top@bar');
+                list.should.contain('top@derp');
+                list.should.contain('top@derp.berp');
+                list.should.contain('top@herp');
+                list.should.contain('top@jerp');
+                list.should.contain('top@jerp@kerp');
+                list.should.contain('top@jerp@flerp');
+                list.should.contain('top@jerp@flerp@haboo');
+            });
         });
 
-        it('returns array of all defined props', function() {
-            var list = this.props.list();
-            list.should.have.lengthOf(10);
-            list.should.contain('top');
-            list.should.contain('top@foo');
-            list.should.contain('top@bar');
-            list.should.contain('top@derp');
-            list.should.contain('top@derp.berp');
-            list.should.contain('top@herp');
-            list.should.contain('top@jerp');
-            list.should.contain('top@jerp@kerp');
-            list.should.contain('top@jerp@flerp');
-            list.should.contain('top@jerp@flerp@haboo');
+        describe('with prototypeless objects', function() {
+            beforeEach(function() {
+                this.resource = toPrototypelessObject({
+                    top: [
+                        toPrototypelessObject({
+                            foo: 'test foo 1',
+                            bar: 'test bar 1',
+                            derp: toPrototypelessObject({
+                                berp: 'test berp'
+                            })
+                        }),
+                        toPrototypelessObject({
+                            foo: 'test foo 2',
+                            bar: 'test bar 2',
+                            herp: ['a', 'b', 'c']
+                        }),
+                        toPrototypelessObject({
+                            foo: 'test foo 3',
+                            bar: 'test bar 3',
+                            jerp: [
+                                toPrototypelessObject({
+                                    kerp: 'lerp',
+                                    flerp: [
+                                        toPrototypelessObject({
+                                            haboo: null
+                                        })
+                                    ]
+                                })
+                            ]
+                        })
+                    ]
+                });
+                this.props = new MonocleProps(this.resource);
+            });
+
+            it('returns array of all defined props', function() {
+                var list = this.props.list();
+                list.should.have.lengthOf(10);
+                list.should.contain('top');
+                list.should.contain('top@foo');
+                list.should.contain('top@bar');
+                list.should.contain('top@derp');
+                list.should.contain('top@derp.berp');
+                list.should.contain('top@herp');
+                list.should.contain('top@jerp');
+                list.should.contain('top@jerp@kerp');
+                list.should.contain('top@jerp@flerp');
+                list.should.contain('top@jerp@flerp@haboo');
+            });
         });
     });
 });
+
+function toPrototypelessObject(object) {
+    var prototypeless = Object.create(null);
+    for (var key in object) {
+        if (Object.hasOwnProperty.call(object, key)) {
+            prototypeless[key] = object[key];
+        }
+    }
+    return prototypeless;
+}
