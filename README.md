@@ -7,10 +7,10 @@ Uses the Monocle API "props" syntax to determine if an object or array contains 
 
 ```js
 // Require this library
-var MoncoleApiProps = require('monocle-api-props');
+var MonocleApiProps = require('monocle-api-props');
 
 // Create an instance with an array or object we want to check
-var props = new MoncoleApiProps(something);
+var props = new MonocleApiProps(something);
 
 // Check if deeply nested properties exist using Monocle API's path syntax
 props.has('someProp.someNestedProp'); // returns true or false if the path exists
@@ -57,7 +57,7 @@ var users = {
 };
 
 // Create an instance with the users data
-var props = new MoncoleApiProps(users);
+var props = new MonocleApiProps(users);
 
 // Basic top-level property access
 props.has('total');             // returns true because users has a "total" property
